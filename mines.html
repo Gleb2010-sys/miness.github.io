@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mines Soft</title>
+<style>
+  body {
+    background-image: url('https://i.postimg.cc/zvRznQ9D/Airbrush-Image-Enhancer-1754419037458.jpg');
+    background-size: cover;   
+    height: 920px; 
+    background-repeat: no-repeat; 
+    background-position: center;  
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    text-align: center;
+    margin-top: 60px;
+  }
+
+  #minefield {
+    display: grid;
+    grid-template-columns: repeat(5, 60px);
+    grid-gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .cell {
+    width: 60px;
+    height: 60px;
+    background-color: #ccc;
+    border: 2px solid #999;
+    font-size: 24px;
+    line-height: 60px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .cell.revealed {
+    background-color: #eee;
+    cursor: default;
+  }
+
+  #status {
+    color: rgb(255, 255, 255);
+    margin-top: 20px;
+    font-size: 1.2em;
+  }
+
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    width: 300px;
+    height: 45px;
+  }
+
+  #photoContainer {
+    margin-top: 20px;
+    display: none; 
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  #photoContainer.show {
+    display: block;
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  #photoContainer img {
+    max-width: 300px;
+    height: auto;
+    border-radius: 20px;
+  }
+
+  footer {
+    margin-top: 500px;
+  }
+
+  h1 {
+    color: rgb(255, 255, 255);
+  }
+
+  button {
+    background-image: linear-gradient(135deg, #1cc5f8, #0b62c5, #155fce);
+    border: None;
+    border-radius: 10px;
+    color: #ffffff;
+  }
+</style>
+</head>
+<body>
+
+<h1>MINES SOFT</h1>
+
+<div id="photoContainer">
+  <img id="randomPhoto" src="" alt="" loading="lazy"/>
+</div>
+<h1>Извените Софт пока не работает, но мы в процесе!</h1>
+<foter>
+<button id="playBtn">Играть</button>
+<main>
+<button onclick="window.location.href='menu.html'">На главную</button>
+</main>
+</foter>
+
+<script>
+const gridSize = 5;
+
+const photos = [
+  'https://i.postimg.cc/vZvqQfmq/photo-1-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/MHR5gj4Y/photo-2-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/prc8bcf8/photo-3-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/vHQgbybH/photo-4-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/SxGw3VC2/photo-5-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/gj9Sn63b/photo-6-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/vZDrwZ6r/photo-7-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/KzhBT7pf/photo-8-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/T29gyDVj/photo-9-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/zDjZQ8km/photo-10-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/tCv0Xkf2/photo-11-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/t4sK7PGy/photo-12-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/Z5X1NRJN/photo-13-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/k4mzjp6X/photo-14-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/cJzcfbGH/photo-15-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/wM8cGRvY/photo-16-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/yYKyhRtF/photo-17-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/sgDPqrVx/photo-18-2025-08-05-14-48-01.jpg',
+  'https://i.postimg.cc/ZqW8Yxvh/photo-19-2025-08-05-14-48-01.jpg'
+];
+
+const preloadedImages = [];
+let imagesLoadedCount = 0;
+
+photos.forEach(src => {
+  const img = new Image();
+  img.src = src;
+  img.onload = () => {
+    imagesLoadedCount++;
+    if (imagesLoadedCount === photos.length) {
+      initGame();
+      document.getElementById('photoContainer').style.display = 'none';
+      document.getElementById('status').innerText = 'Нажмите "Играть" чтобы узнать позицию!';
+    }
+  };
+  preloadedImages.push(img);
+});
+
+document.getElementById('playBtn').addEventListener('click', () => {
+  showRandomPhoto(true);
+});
+
+function initGame() {
+  const minefield = document.getElementById('minefield');
+  minefield.innerHTML = '';
+
+  for (let i = 0; i < gridSize * gridSize; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.dataset.index = i;
+    cell.addEventListener('click', onCellClick);
+    minefield.appendChild(cell);
+  }
+  document.getElementById('status').innerText = 'Нажмите "Играть" чтобы узнать позиции';
+}
+
+function onCellClick(e) {
+  const cell = e.target;
+  if (cell.classList.contains('revealed')) return;
+
+  showRandomPhoto(true);
+  cell.classList.add('revealed');
+}
+
+function showRandomPhoto(repeat = false) {
+  const randIndex = Math.floor(Math.random() * photos.length);
+  const imgSrc = photos[randIndex];
+
+  const photoContainer = document.getElementById('photoContainer');
+  const img = document.getElementById('randomPhoto');
+
+  img.src = imgSrc;
+  img.setAttribute('loading', 'lazy');
+
+  if (repeat) {
+    photoContainer.classList.remove('show');
+    setTimeout(() => {
+      photoContainer.classList.add('show');
+    }, 10);
+  } else {
+    photoContainer.style.display = 'block';
+    setTimeout(() => {
+      photoContainer.classList.add('show');
+    }, 10);
+  }
+
+  document.getElementById('status').innerText = '';
+}
+
+function restartGame() {
+  initGame();
+  const container = document.getElementById('photoContainer');
+  container.classList.remove('show');
+  setTimeout(() => {
+    container.style.display = 'none';
+  }, 500);
+  document.getElementById('status').innerText = 'Нажмите "Играть" для просмотра фото.';
+}
+
+window.onload = () => {
+};
+</script>
+
+</body>
+</html>
